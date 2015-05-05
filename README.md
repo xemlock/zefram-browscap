@@ -10,6 +10,7 @@ Add to your `application.ini`:
 
     resources.browscap.cacheDir = "/path/to/cache/dir"
     resources.browscap.datasetType = "default"
+    resources.browscap.autoUpdate = TRUE
 
 To retrieve browser information use:
 
