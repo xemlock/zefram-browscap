@@ -229,7 +229,7 @@ class ZeframBrowscap_Browscap
             $updater = new \Crossjoin\Browscap\Updater\None();
         }
         Crossjoin\Browscap\Browscap::setUpdater($updater);
-        
+
         switch ($this->getDatasetType()) {
             case self::DATASET_TYPE_SMALL:
                 $datasetType = \Crossjoin\Browscap\Browscap::DATASET_TYPE_SMALL;
