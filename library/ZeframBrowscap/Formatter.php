@@ -1,12 +1,18 @@
 <?php
 
+/**
+ * This formatter modifies data, so that it is in the same format as in get_browser()
+ * result - all keys are lower case, values are assigned correct types.
+ *
+ * @author xemlock
+ */
 class ZeframBrowscap_Formatter extends \Crossjoin\Browscap\Formatter\AbstractFormatter
 {
     /**
      * @var array
      */
     protected $_settings = array(
-        // properties set during parsing browscap INI file
+        // properties set during parsing of the browscap INI file
         'browser_name_regex'          => null,
         'browser_name_pattern'        => null,
         'Parent'                      => null,
@@ -69,6 +75,25 @@ class ZeframBrowscap_Formatter extends \Crossjoin\Browscap\Formatter\AbstractFor
     public function setData(array $data)
     {
         foreach ($data as $key => $value) {
+            $this->_settings[strtolower($key)] = $this->_coerceValue($value);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->_settings;
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    protected function _coerceValue($value)
+    {
+        if (is_string($value)) {
             switch (strtolower($value)) {
                 case 'unknown':
                     $value = null;
@@ -83,39 +108,13 @@ class ZeframBrowscap_Formatter extends \Crossjoin\Browscap\Formatter\AbstractFor
                     break;
             }
 
-            // convert to int only integer values, otherwise version numers
-            // will be garbled
+            // convert to int type only integral (digit-only) values to avoid garbling of version numbers
             if (is_string($value) && ctype_digit($value)) {
+                /** @noinspection PhpWrongStringConcatenationInspection */
                 $value = 0 + $value;
             }
-
-            $this->_settings[$key] = $value;
         }
-    }
 
-    /**
-     * @return array
-     */
-    public function getData()
-    {
-        return $this->_settings;
-    }
-
-    /**
-     * @param  string
-     * @return mixed
-     */
-    public function __get($key)
-    {
-        return isset($this->_settings[$key]) ? $this->_settings[$key] : null;
-    }
-
-    /**
-     * @param  string
-     * @return bool
-     */
-    public function __isset($key)
-    {
-        return isset($this->_settings[$key]);
+        return $value;
     }
 }
