@@ -1,8 +1,10 @@
 <?php
 
 /**
- * This formatter modifies data, so that it is in the same format as in get_browser()
- * result - all keys are lower case, values are assigned correct types.
+ * This formatter modifies data, so that it is in the same format as in
+ * get_browser() result - all keys are lower case, values are strings, however
+ * boolean values are represented by '1' and '', instead of 'true' and 'false'
+ * strings. Properties not present in browscap file are null.
  *
  * @author xemlock
  */
@@ -11,71 +13,77 @@ class ZeframBrowscap_Formatter extends \Crossjoin\Browscap\Formatter\AbstractFor
     /**
      * @var array
      */
-    protected $_settings = array(
+    protected $_capabilityNames = array(
         // properties set during parsing of the browscap INI file
-        'browser_name_regex'          => null,
-        'browser_name_pattern'        => null,
-        'Parent'                      => null,
+        'browser_name_regex',
+        'browser_name_pattern',
+        'Parent',
 
         // small dataset properties
-        'Comment'                     => null,
-        'Browser'                     => null,
-        'Version'                     => null,
-        'Platform'                    => null,
-        'isMobileDevice'              => null,
-        'isTablet'                    => null,
-        'Device_Type'                 => null,
+        'Comment',
+        'Browser',
+        'Version',
+        'Platform',
+        'isMobileDevice',
+        'isTablet',
+        'Device_Type',
 
         // additional properties provided by default dataset
-        'Browser_Maker'               => null,
-        'MajorVer'                    => null,
-        'MinorVer'                    => null,
-        'Win32'                       => null,
-        'Win64'                       => null,
-        'Device_Pointing_Method'      => null,
+        'Browser_Maker',
+        'MajorVer',
+        'MinorVer',
+        'Win32',
+        'Win64',
+        'Device_Pointing_Method',
 
         // additional properties provided by large dataset
-        'Browser_Type'                => null,
-        'Browser_Bits'                => null,
-        'Browser_Modus'               => null,
-        'Platform_Version'            => null,
-        'Platform_Description'        => null,
-        'Platform_Bits'               => null,
-        'Platform_Maker'              => null,
-        'Alpha'                       => null,
-        'Beta'                        => null,
-        'Win16'                       => null,
-        'Frames'                      => null,
-        'IFrames'                     => null,
-        'Tables'                      => null,
-        'Cookies'                     => null,
-        'BackgroundSounds'            => null,
-        'JavaScript'                  => null,
-        'VBScript'                    => null,
-        'JavaApplets'                 => null,
-        'ActiveXControls'             => null,
-        'isSyndicationReader'         => null,
-        'Crawler'                     => null,
-        'CssVersion'                  => null,
-        'AolVersion'                  => null,
-        'Device_Name'                 => null,
-        'Device_Maker'                => null,
-        'Device_Code_Name'            => null,
-        'Device_Brand_Name'           => null,
-        'RenderingEngine_Name'        => null,
-        'RenderingEngine_Version'     => null,
-        'RenderingEngine_Description' => null,
-        'RenderingEngine_Maker'       => null,
+        'Browser_Type',
+        'Browser_Bits',
+        'Browser_Modus',
+        'Platform_Version',
+        'Platform_Description',
+        'Platform_Bits',
+        'Platform_Maker',
+        'Alpha',
+        'Beta',
+        'Win16',
+        'Frames',
+        'IFrames',
+        'Tables',
+        'Cookies',
+        'BackgroundSounds',
+        'JavaScript',
+        'VBScript',
+        'JavaApplets',
+        'ActiveXControls',
+        'isSyndicationReader',
+        'Crawler',
+        'CssVersion',
+        'AolVersion',
+        'Device_Name',
+        'Device_Maker',
+        'Device_Code_Name',
+        'Device_Brand_Name',
+        'RenderingEngine_Name',
+        'RenderingEngine_Version',
+        'RenderingEngine_Description',
+        'RenderingEngine_Maker',
     );
 
     /**
-     * @param  array $data
+     * @var array
+     */
+    protected $_settings;
+
+    /**
+     * @param array $data
      * @return void
      */
-    public function setData(array $data)
+    public function setData(array $data = array())
     {
+        $this->_settings = array();
         foreach ($data as $key => $value) {
-            $this->_settings[strtolower($key)] = $this->_coerceValue($value);
+            $this->_settings[strtolower($key)] = $this->_stringify($value);
         }
     }
 
@@ -84,37 +92,34 @@ class ZeframBrowscap_Formatter extends \Crossjoin\Browscap\Formatter\AbstractFor
      */
     public function getData()
     {
-        return $this->_settings;
+        // lowercase default capability names, set all values to null
+        $data = array_fill_keys(
+            array_map('strtolower', $this->_capabilityNames),
+            null
+        );
+        // add values provided by the parser
+        if ($this->_settings) {
+            $data = array_merge($data, $this->_settings);
+        }
+        return $data;
     }
 
     /**
      * @param mixed $value
-     * @return mixed
+     * @return string
      */
-    protected function _coerceValue($value)
+    protected function _stringify($value)
     {
-        if (is_string($value)) {
-            switch (strtolower($value)) {
-                case 'unknown':
-                    $value = null;
-                    break;
+        switch (strtolower($value)) {
+            case 'true':
+                $value = true;
+                break;
 
-                case 'true':
-                    $value = true;
-                    break;
-
-                case 'false':
-                    $value = false;
-                    break;
-            }
-
-            // convert to int type only integral (digit-only) values to avoid garbling of version numbers
-            if (is_string($value) && ctype_digit($value)) {
-                /** @noinspection PhpWrongStringConcatenationInspection */
-                $value = 0 + $value;
-            }
+            case 'false':
+                $value = false;
+                break;
         }
 
-        return $value;
+        return (string) $value;
     }
 }
