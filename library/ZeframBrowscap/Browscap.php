@@ -22,10 +22,20 @@ class ZeframBrowscap_Browscap
      */
     protected $_datasetType = self::DATASET_TYPE_DEFAULT;
 
+    /**
+     * @var bool
+     */
+    protected $_autoUpdate = true;
+
     /** 
      * @var \Crossjoin\Browscap\Formatter\AbstractFormatter
      */
     protected $_formatter;
+
+    /**
+     * @var \Crossjoin\Browscap\Updater\AbstractUpdater
+     */
+    protected $_updater;
 
     /**
      * @var \Crossjoin\Browscap\Browscap
@@ -45,6 +55,7 @@ class ZeframBrowscap_Browscap
 
     /**
      * @param  array $options
+     * @return $this
      */
     public function setOptions(array $options)
     {
@@ -70,6 +81,8 @@ class ZeframBrowscap_Browscap
 
     /**
      * @param  string $cacheDir
+     * @return $this
+     * @throws InvalidArgumentException
      */
     public function setCacheDir($cacheDir)
     {
@@ -81,7 +94,7 @@ class ZeframBrowscap_Browscap
     }
 
     /**
-     * @return $string
+     * @return string
      */
     public function getDatasetType()
     {
@@ -89,7 +102,9 @@ class ZeframBrowscap_Browscap
     }
 
     /**
-     * @param  string
+     * @param string $datasetType
+     * @return $this
+     * @throws InvalidArgumentException
      */
     public function setDatasetType($datasetType)
     {
@@ -107,6 +122,24 @@ class ZeframBrowscap_Browscap
     }
 
     /**
+     * @param bool $autoUpdate
+     * @return $this
+     */
+    public function setAutoUpdate($autoUpdate)
+    {
+        $this->_autoUpdate = $autoUpdate;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getAutoUpdate()
+    {
+        return $this->_autoUpdate;
+    }
+
+    /**
      * @return \Crossjoin\Browscap\Formatter\AbstractFormatter
      */
     public function getFormatter()
@@ -119,11 +152,28 @@ class ZeframBrowscap_Browscap
 
     /**
      * @param  \Crossjoin\Browscap\Formatter\AbstractFormatter $formatter
+     * @return $this
      */
     public function setFormatter(\Crossjoin\Browscap\Formatter\AbstractFormatter $formatter)
     {
         $this->_formatter = $formatter;
         return $this;
+    }
+
+    /**
+     * @return \Crossjoin\Browscap\Updater\AbstractUpdater
+     * @throws RuntimeException
+     */
+    public function getUpdater()
+    {
+        if ($this->_updater === null) {
+            $updater = \Crossjoin\Browscap\Updater\FactoryUpdater::getInstance();
+            if (!$updater) {
+                throw new RuntimeException('Unable to create an updater instance');
+            }
+            $this->_updater = $updater;
+        }
+        return $this->_updater;
     }
 
     /**
@@ -138,9 +188,9 @@ class ZeframBrowscap_Browscap
     }
 
     /**
-     * @param  string $userAgent
-     * @param  bool $returnArray
-     * @return object|array
+     * @param string|null $userAgent OPTIONAL
+     * @param bool $returnArray OPTIONAL
+     * @return mixed
      */
     public function getBrowser($userAgent = null, $returnArray = false)
     {
@@ -158,19 +208,27 @@ class ZeframBrowscap_Browscap
      */
     public function update($forceUpdate = false)
     {
-        $this->_setupBrowscapOptions();
+        $this->_setupBrowscapOptions($forceUpdate);
         \Crossjoin\Browscap\Browscap::update($forceUpdate);
     }
 
-    /** 
+    /**
      * Updates global \Crossjoin\Browscap confguration according to local configuration
      *
+     * @param bool $forceUpdate OPTIONAL
      * @return void
      */
-    protected function _setupBrowscapOptions()
+    protected function _setupBrowscapOptions($forceUpdate = false)
     {
         \Crossjoin\Browscap\Cache\File::setCacheDirectory($this->getCacheDir());
         \Crossjoin\Browscap\Browscap::setFormatter($this->getFormatter());
+
+        if ($forceUpdate || $this->getAutoUpdate()) {
+            $updater = $this->getUpdater();
+        } else {
+            $updater = new \Crossjoin\Browscap\Updater\None();
+        }
+        Crossjoin\Browscap\Browscap::setUpdater($updater);
         
         switch ($this->getDatasetType()) {
             case self::DATASET_TYPE_SMALL:
@@ -183,6 +241,10 @@ class ZeframBrowscap_Browscap
 
             case self::DATASET_TYPE_LARGE:
                 $datasetType = \Crossjoin\Browscap\Browscap::DATASET_TYPE_LARGE;
+                break;
+
+            default:
+                $datasetType = null;
                 break;
         }
         \Crossjoin\Browscap\Browscap::setDatasetType($datasetType);
