@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit backupGlobals="false"
+         colore="true"
+         verbose="true"
+         bootstrap="tests/bootstrap.php"
+>
+    <testsuites>
+        <testsuite name="ZeframBrowscap Test Suite">
+            <directory suffix=".php">./tests/ZeframBrowscap</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./library/ZeframBrowscap/</directory>
+        </whitelist>
+    </filter>
+
+</phpunit>
