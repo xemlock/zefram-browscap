@@ -1,5 +1,8 @@
 # zefram-browscap
 
+Browser capability detection for Zend Framework 1. This library is a wrapper for
+[crossjoin/browscap](https://packagist.org/packages/crossjoin/browscap) library.
+
 Add to your `application.ini`:
 
     includePaths.ZeframBrowscap = "/path/to/zefram-browscap"

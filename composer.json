@@ -10,7 +10,7 @@
     ],
     "require": {
         "php": ">=5.3",
-        "crossjoin/browscap": "~1.0"
+        "crossjoin/browscap": "v1.0.0"
     },
     "autoload": {
         "psr-0": {
