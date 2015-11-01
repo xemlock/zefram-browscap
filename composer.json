@@ -16,5 +16,8 @@
         "psr-0": {
             "ZeframBrowscap": "library/"
         }
-    }
+    },
+    "include-path": [
+        "library/"
+    ]
 }
